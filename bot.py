@@ -8,7 +8,7 @@ from telebot.types import ReplyKeyboardMarkup, ReplyKeyboardRemove
 
 # ================= CONFIG ================= #
 
-TOKEN = os.getenv("TOKEN")
+TOKEN = os.getenv("BOT_TOKEN")
 ADMIN_ID = 8540477830
 
 BANK_DETAILS = """
@@ -296,3 +296,4 @@ while True:
         bot.infinity_polling()
     except:
         time.sleep(5)
+
