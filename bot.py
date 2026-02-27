@@ -14,10 +14,10 @@ ADMIN_ID = 8540477830
 BANK_DETAILS = """
 🏦 Bank Details
 
-Bank: Commercial Bank
-Account Name: Study Master
-Account Number: 1234567890
-Branch: Colombo
+Bank: PEOPLE'S BANK
+Account Name: SUSARA AMANETH KOKU HENNEDIGE
+Account Number: 278-2-001-0-0097988
+Branch: Nittambuwa
 """
 
 bot = telebot.TeleBot(TOKEN)
@@ -298,3 +298,4 @@ threading.Thread(target=daily_check, daemon=True).start()
 print("🔥 FINAL PREMIUM BOT RUNNING...")
 
 bot.infinity_polling(skip_pending=True)
+
