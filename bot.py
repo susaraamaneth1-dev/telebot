@@ -6,7 +6,7 @@ import os
 from datetime import datetime, timedelta
 from telebot.types import ReplyKeyboardMarkup, ReplyKeyboardRemove
 
-# ================= CONFIG ================= #
+# ================= CONFIG =================
 
 TOKEN = os.getenv("BOT_TOKEN")
 ADMIN_ID = 8540477830
@@ -22,38 +22,37 @@ Branch: Colombo
 
 bot = telebot.TeleBot(TOKEN)
 
-# ================= DATABASE ================= #
+# ================= DATABASE =================
 
 conn = sqlite3.connect("students_final.db", check_same_thread=False)
 cursor = conn.cursor()
 
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS students (
-    telegram_id INTEGER PRIMARY KEY,
-    name TEXT,
-    grade TEXT,
-    exam_info TEXT,
-    subjects TEXT,
-    parent_phone TEXT,
-    weekly_schedule TEXT,
-    plan TEXT,
-    target TEXT,
-    status TEXT,
-    join_date TEXT,
-    expiry_date TEXT,
-    receipt_file_id TEXT,
-    notion_link TEXT
+telegram_id INTEGER PRIMARY KEY,
+name TEXT,
+grade TEXT,
+exam_info TEXT,
+subjects TEXT,
+parent_phone TEXT,
+weekly_schedule TEXT,
+plan TEXT,
+target TEXT,
+status TEXT,
+join_date TEXT,
+expiry_date TEXT,
+receipt_file_id TEXT,
+notion_link TEXT
 )
 """)
 conn.commit()
 
 user_data = {}
 
-# ================= RESET COMMAND ================= #
+# ================= RESET COMMAND =================
 
 @bot.message_handler(commands=['resetme'])
 def reset_profile(message):
-
     chat_id = message.chat.id
 
     cursor.execute("DELETE FROM students WHERE telegram_id=?", (chat_id,))
@@ -67,8 +66,7 @@ def reset_profile(message):
     msg = bot.send_message(chat_id, "Enter Student Name:")
     bot.register_next_step_handler(msg, get_grade)
 
-
-# ================= START ================= #
+# ================= START =================
 
 @bot.message_handler(commands=['start'])
 def start(message):
@@ -105,8 +103,7 @@ def start(message):
     msg = bot.send_message(chat_id, "Enter Student Name:")
     bot.register_next_step_handler(msg, get_grade)
 
-
-# ================= REGISTRATION ================= #
+# ================= REGISTRATION =================
 
 def get_grade(message):
     user_data[message.chat.id] = {"name": message.text}
@@ -169,8 +166,7 @@ def finish_registration(message):
     msg = bot.send_message(chat_id, "Upload Payment Receipt:")
     bot.register_next_step_handler(msg, save_receipt)
 
-
-# ================= RECEIPT ================= #
+# ================= RECEIPT =================
 
 def save_receipt(message):
 
@@ -180,7 +176,11 @@ def save_receipt(message):
 
     chat_id = message.chat.id
     file_id = message.photo[-1].file_id
-    data = user_data[chat_id]
+    data = user_data.get(chat_id)
+
+    if not data:
+        bot.send_message(chat_id, "Session expired. Type /start again.")
+        return
 
     cursor.execute("""
     INSERT OR REPLACE INTO students
@@ -211,8 +211,7 @@ Approve using:
 
     bot.send_photo(ADMIN_ID, file_id, caption=summary)
 
-
-# ================= APPROVE ================= #
+# ================= APPROVE =================
 
 @bot.message_handler(func=lambda m: m.chat.id == ADMIN_ID and m.text.startswith("/approve_"))
 def approve(message):
@@ -268,8 +267,7 @@ def approve(message):
     except Exception as e:
         bot.send_message(ADMIN_ID, f"Error: {e}")
 
-
-# ================= EXPIRE CHECK ================= #
+# ================= EXPIRE CHECK =================
 
 def daily_check():
     while True:
@@ -287,14 +285,8 @@ def daily_check():
 
         time.sleep(86400)
 
-threading.Thread(target=daily_check).start()
+threading.Thread(target=daily_check, daemon=True).start()
 
 print("🔥 FINAL PREMIUM BOT RUNNING...")
 
-while True:
-    try:
-        bot.infinity_polling()
-    except:
-        time.sleep(5)
-
-
+bot.infinity_polling(skip_pending=True)
