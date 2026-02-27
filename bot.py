@@ -134,6 +134,7 @@ def get_plan(message):
     user_data[message.chat.id]["weekly_schedule"] = message.text
 
     kb = ReplyKeyboardMarkup(resize_keyboard=True)
+    kb.add("5 Days Free Trial")
     kb.add("2 Week - 300 LKR")
     kb.add("1 Month - 700 LKR")
 
@@ -144,7 +145,9 @@ def get_target(message):
 
     chat_id = message.chat.id
 
-    if "2 Week" in message.text:
+    if "5 Days" in message.text:
+        plan = "5 Days Free Trial"
+    elif "2 Week" in message.text:
         plan = "2 Week"
     else:
         plan = "1 Month"
@@ -234,7 +237,12 @@ def approve(message):
             bot.send_message(ADMIN_ID, "❌ Student not found.")
             return
 
-        duration = 14 if row[0] == "2 Week" else 30
+        if row[0] == "5 Days Free Trial":
+            duration = 5
+        elif row[0] == "2 Week":
+            duration = 14
+        else:
+            duration = 30
 
         join_date = datetime.now()
         expiry_date = join_date + timedelta(days=duration)
@@ -290,4 +298,3 @@ threading.Thread(target=daily_check, daemon=True).start()
 print("🔥 FINAL PREMIUM BOT RUNNING...")
 
 bot.infinity_polling(skip_pending=True)
-
