@@ -178,7 +178,7 @@ def welcome_new_member(message):
 ඔබගේ study journey එක organize කරගන්න
 අපගේ EduGrow Bot එකට connect වෙන්න.
 
-🤖 https://t.me/{BOT_USERNAME}?start=welcome
+🤖 https://t.me/{@WORLDSTUDYGROWBOT}?start=welcome
 
 Build • Discipline • Rise
 """
@@ -462,3 +462,4 @@ threading.Thread(target=daily_check, daemon=True).start()
 print("🔥 FINAL PREMIUM BOT RUNNING...")
 
 bot.infinity_polling(skip_pending=True)
+
