@@ -101,7 +101,6 @@ EduGrow
 Build • Discipline • Rise
 """
 
-# මෙතන ඔයාගේ bot username එක දාන්න
 BOT_USERNAME = "@WORLDSTUDYGROWBOT"
 
 bot = telebot.TeleBot(TOKEN, parse_mode="HTML")
@@ -126,10 +125,31 @@ CREATE TABLE IF NOT EXISTS students (
     join_date TEXT,
     expiry_date TEXT,
     receipt_file_id TEXT,
-    notion_link TEXT
+    notion_link TEXT,
+    student_username TEXT,
+    student_password TEXT
 )
 """)
 conn.commit()
+
+# old db එකක columns නැත්නම් add කරන්න
+try:
+    cursor.execute("ALTER TABLE students ADD COLUMN notion_link TEXT")
+    conn.commit()
+except sqlite3.OperationalError:
+    pass
+
+try:
+    cursor.execute("ALTER TABLE students ADD COLUMN student_username TEXT")
+    conn.commit()
+except sqlite3.OperationalError:
+    pass
+
+try:
+    cursor.execute("ALTER TABLE students ADD COLUMN student_password TEXT")
+    conn.commit()
+except sqlite3.OperationalError:
+    pass
 
 user_data = {}
 
@@ -194,7 +214,7 @@ def start(message):
     if chat_id == ADMIN_ID:
         bot.send_message(
             chat_id,
-            "🛠 Admin Mode Ready.\n\nApprove using:\n<code>/approve_USERID https://notionlink</code>"
+            "🛠 Admin Mode Ready.\n\nApprove using:\n<code>/approve_USERID https://notionlink username password</code>"
         )
         return
 
@@ -202,7 +222,11 @@ def start(message):
         send_registration_intro(chat_id)
         return
 
-    cursor.execute("SELECT status, expiry_date, notion_link FROM students WHERE telegram_id=?", (chat_id,))
+    cursor.execute("""
+        SELECT status, expiry_date, notion_link, student_username, student_password
+        FROM students
+        WHERE telegram_id=?
+    """, (chat_id,))
     row = cursor.fetchone()
 
     if row and row[0] == "approved":
@@ -216,7 +240,10 @@ def start(message):
 🎓 <b>STUDENT DASHBOARD</b>
 
 🚀 <b>Start Project:</b>
-{row[2]}
+{row[2] if row[2] else 'Not added yet'}
+
+👤 <b>Username:</b> {row[3] if row[3] else 'Not added yet'}
+🔐 <b>Password:</b> {row[4] if row[4] else 'Not added yet'}
 
 ⏳ <b>Days Remaining:</b> {remaining}
 """)
@@ -365,7 +392,7 @@ def save_receipt(message):
 🎯 <b>Target:</b> {data['target']}
 
 Approve using:
-<code>/approve_{chat_id} https://notionlink</code>
+<code>/approve_{chat_id} https://notionlink username password</code>
 """
 
     bot.send_photo(ADMIN_ID, file_id, caption=summary)
@@ -380,15 +407,17 @@ def approve(message):
     try:
         parts = message.text.split()
 
-        if len(parts) < 2:
+        if len(parts) < 4:
             bot.send_message(
                 ADMIN_ID,
-                "❌ Format:\n<code>/approve_USERID https://notionlink</code>"
+                "❌ Format:\n<code>/approve_USERID https://notionlink username password</code>"
             )
             return
 
         tg_id = int(parts[0].split("_")[1])
         link = parts[1]
+        student_username = parts[2]
+        student_password = parts[3]
 
         cursor.execute("SELECT plan FROM students WHERE telegram_id=?", (tg_id,))
         row = cursor.fetchone()
@@ -412,12 +441,16 @@ def approve(message):
         SET status='approved',
             join_date=?,
             expiry_date=?,
-            notion_link=?
+            notion_link=?,
+            student_username=?,
+            student_password=?
         WHERE telegram_id=?
         """, (
             join_date.strftime("%Y-%m-%d"),
             expiry_date.strftime("%Y-%m-%d"),
             link,
+            student_username,
+            student_password,
             tg_id
         ))
         conn.commit()
@@ -427,6 +460,9 @@ def approve(message):
 
 🚀 <b>Start Project:</b>
 {link}
+
+👤 <b>Username:</b> {student_username}
+🔐 <b>Password:</b> {student_password}
 
 📅 <b>Start:</b> {join_date.strftime("%Y-%m-%d")}
 ⏳ <b>Expire:</b> {expiry_date.strftime("%Y-%m-%d")}
@@ -462,6 +498,3 @@ threading.Thread(target=daily_check, daemon=True).start()
 print("🔥 FINAL PREMIUM BOT RUNNING...")
 
 bot.infinity_polling(skip_pending=True)
-
-
-
