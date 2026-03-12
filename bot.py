@@ -102,7 +102,7 @@ Build • Discipline • Rise
 """
 
 # මෙතන ඔයාගේ bot username එක දාන්න
-BOT_USERNAME = "@WORLDSTUDYGROWBOT"
+BOT_USERNAME = "WORLDSTUDYGROWBOT"
 
 bot = telebot.TeleBot(TOKEN, parse_mode="HTML")
 
@@ -462,4 +462,5 @@ threading.Thread(target=daily_check, daemon=True).start()
 print("🔥 FINAL PREMIUM BOT RUNNING...")
 
 bot.infinity_polling(skip_pending=True)
+
 
